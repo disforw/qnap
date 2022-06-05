@@ -1,0 +1,5 @@
+{
+    "name": "Qnap",
+    "domains": ["sensor"],
+    "homeassistant": "2021.5"
+}

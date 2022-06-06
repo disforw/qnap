@@ -1,5 +1,6 @@
 {
     "name": "Qnap",
     "domains": ["sensor"],
-    "homeassistant": "2021.5"
+    "homeassistant": "2021.5",
+    "iot_class": "Local Push"
 }

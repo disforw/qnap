@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_NAME, DATA_GIBIBYTES
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+#from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DRIVE,

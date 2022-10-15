@@ -338,4 +338,4 @@ class QNAPFolderSensor(QNAPSensor):
             return {
                 ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}",
                 VOLUME_NAME: volume_name,
-            }
+            }   

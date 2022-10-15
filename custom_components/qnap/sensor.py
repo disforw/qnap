@@ -42,14 +42,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
 
     sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in CPU_SENSOR]
-    )
-    
-    sensors.extend(
         [QNAPSystemSensor(coordinator, description, uid) for description in BAS_SENSOR]
     )
 
-
+    sensors.extend(
+        [QNAPCPUSensor(coordinator, description, uid) for description in CPU_SENSOR]
+    )
 
     sensors.extend(
         [QNAPMemorySensor(coordinator, description, uid) for description in MEM_SENSOR]
@@ -340,4 +338,4 @@ class QNAPFolderSensor(QNAPSensor):
             return {
                 ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}",
                 VOLUME_NAME: volume_name,
-            }   
+            }

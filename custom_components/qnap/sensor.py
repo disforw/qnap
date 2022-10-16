@@ -1,35 +1,11 @@
-"""Support for QNAP NAS Sensors."""
-from __future__ import annotations
 
-from datetime import timedelta
+"""Support for QNAP NAS Sensors."""
 import logging
 
-from qnapstats import QNAPStats
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-)
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    DATA_GIBIBYTES,
-    DATA_RATE_MEBIBYTES_PER_SECOND,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import ATTR_NAME, DATA_GIBIBYTES
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-_LOGGER = logging.getLogger(__name__)
+
 from .const import (
     ATTR_DRIVE,
     ATTR_IP,
@@ -57,7 +33,7 @@ from .const import (
     VOLUME_NAME,
 )
 
-
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -130,7 +106,9 @@ def round_nicely(number):
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None):
+    def __init__(
+        self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
+    ):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self.entity_description = description
@@ -142,11 +120,11 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self):
         """Return unique_id."""
         return f"{self.uid}_{self.name}"
-    
+
     @property
     def coordinator_context(self):
         return None
-
+    
     @property
     def name(self):
         """Return the name of the sensor, if any."""
@@ -164,6 +142,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
             "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
             "manufacturer": DEFAULT_NAME,
         }
+
 
 class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
@@ -204,6 +183,36 @@ class QNAPMemorySensor(QNAPSensor):
             size = round_nicely(float(data["total"]) / 1024)
             return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
 
+
+class QNAPSystemSensor(QNAPSensor):
+    """A QNAP sensor that monitors overall system health."""
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.entity_description.key == "status":
+            return self.coordinator.data["system_health"]
+
+        if self.entity_description.key == "system_temp":
+            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if self.coordinator.data:
+            data = self.coordinator.data["system_stats"]
+            days = int(data["uptime"]["days"])
+            hours = int(data["uptime"]["hours"])
+            minutes = int(data["uptime"]["minutes"])
+
+            return {
+                ATTR_NAME: data["system"]["name"],
+                ATTR_MODEL: data["system"]["model"],
+                ATTR_SERIAL: data["system"]["serial_number"],
+                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
+            }
+
+
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
@@ -237,36 +246,13 @@ class QNAPNetworkSensor(QNAPSensor):
             }
 
 
-class QNAPSystemSensor(QNAPSensor):
-    """A QNAP sensor that monitors overall system health."""
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.entity_description.key == "status":
-            return self.coordinator.data["system_health"]
-
-        if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]
-            days = int(data["uptime"]["days"])
-            hours = int(data["uptime"]["hours"])
-            minutes = int(data["uptime"]["minutes"])
-
-            return {
-                ATTR_NAME: data["system"]["name"],
-                ATTR_MODEL: data["system"]["model"],
-                ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
-            }
-
 class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
+
+    @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        return f"Drive {self.monitor_device} - {self.entity_description.name}"
 
     @property
     def native_value(self):
@@ -278,11 +264,6 @@ class QNAPDriveSensor(QNAPSensor):
 
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
-
-    @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        return f"Drive {self.monitor_device} - {self.entity_description.name}"
 
     @property
     def extra_state_attributes(self):

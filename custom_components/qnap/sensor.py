@@ -204,10 +204,6 @@ class QNAPMemorySensor(QNAPSensor):
             size = round_nicely(float(data["total"]) / 1024)
             return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
 
-    @property
-    def coordinator_context(self):
-        return None
-
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 

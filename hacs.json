@@ -2,5 +2,6 @@
     "name": "Qnap",
     "domains": ["sensor"],
     "homeassistant": "2021.5",
+    "render_readme": true,
     "iot_class": "Local Push"
 }

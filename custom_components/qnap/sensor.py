@@ -160,6 +160,9 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
             "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
             "manufacturer": DEFAULT_NAME,
         }
+    @property
+    def coordinator_context(self):
+        return None
 
 
 class QNAPCPUSensor(QNAPSensor):
@@ -262,9 +265,6 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_SERIAL: data["system"]["serial_number"],
                 ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
             }
-    @property
-    def coordinator_context(self):
-        return None
 
 class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""

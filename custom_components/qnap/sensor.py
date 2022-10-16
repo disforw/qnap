@@ -5,6 +5,9 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_NAME, DATA_GIBIBYTES
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_DRIVE,
@@ -35,12 +38,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigType,
+    async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     uid = config_entry.unique_id
-    sensors = []
+    sensors: list[QNAPSensor] = []
 
     sensors.extend(
         [QNAPSystemSensor(coordinator, description, uid) for description in BAS_SENSOR]

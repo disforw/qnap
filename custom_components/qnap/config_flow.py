@@ -76,11 +76,9 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 title = stats["system"]["name"].capitalize()
                 if self.is_imported:
-                    notify_create(
-                        self.hass,
+                    _LOGGER.warn(
                         "The import of the QNAP configuration was successful. \
-                        Please remove the platform from the YAML configuration file",
-                        "QNAP Import",
+                        Please remove the platform from the YAML configuration file"
                     )
                 return self.async_create_entry(title=title, data=user_input)
 

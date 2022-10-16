@@ -142,6 +142,10 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self):
         """Return unique_id."""
         return f"{self.uid}_{self.name}"
+    
+    @property
+    def coordinator_context(self):
+        return None
 
     @property
     def name(self):
@@ -160,10 +164,6 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
             "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
             "manufacturer": DEFAULT_NAME,
         }
-    @property
-    def coordinator_context(self):
-        return None
-
 
 class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
@@ -204,6 +204,9 @@ class QNAPMemorySensor(QNAPSensor):
             size = round_nicely(float(data["total"]) / 1024)
             return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
 
+    @property
+    def coordinator_context(self):
+        return None
 
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""

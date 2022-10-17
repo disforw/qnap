@@ -135,8 +135,8 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return f"{self.monitor_device} - {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+            return f"{self.monitor_device} - {self.entity_description.name} efgh"
+        return f"{self.entity_description.name} abcd"
 
     @property
     def device_info(self):

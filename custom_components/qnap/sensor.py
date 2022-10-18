@@ -34,6 +34,7 @@ from .const import (
     NET_SENSOR,
     VOL_SENSOR,
     VOLUME_NAME,
+    UPD_SENSOR,
 )
 
 _LOGGER = logging.getLogger(__name__)

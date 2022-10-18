@@ -204,7 +204,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     ),
 )
 
-BSC_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
+BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
 TMP_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "temperature"]
 CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
 MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]

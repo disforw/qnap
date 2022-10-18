@@ -202,7 +202,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="update",
         key="status",
-        name="Firmware",
+        name="Update",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=True,
     ),

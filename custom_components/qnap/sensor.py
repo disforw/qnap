@@ -51,6 +51,10 @@ async def async_setup_entry(
     sensors.extend(
         [QNAPSystemSensor(coordinator, description, uid) for description in BAS_SENSOR]
     )
+    
+    sensors.extend(
+        [QNAPSystemSensor(coordinator, description, uid) for description in UPD_SENSOR]
+    )
 
     sensors.extend(
         [QNAPCPUSensor(coordinator, description, uid) for description in CPU_SENSOR]
@@ -202,6 +206,9 @@ class QNAPSystemSensor(QNAPSensor):
 
         if self.entity_description.key == "system_temp":
             return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+        
+        if self.entity_description.key == "update":
+            return self.coordinator.data["update"]
 
     @property
     def extra_state_attributes(self):

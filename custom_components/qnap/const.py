@@ -51,17 +51,14 @@ class QNapSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
-        stype="temperature",
+        stype="basic",
         key="status",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Health",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     QNapSensorEntityDescription(
-        stype="temperature",
+        stype="basic",
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -205,7 +202,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
 )
 
 BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
-TMP_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "temperature"]
 CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
 MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
 NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]

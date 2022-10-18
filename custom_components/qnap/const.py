@@ -200,7 +200,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     QNapSensorEntityDescription(
-        stype="firmware",
+        stype="update",
         key="status",
         name="Firmware",
         icon="mdi:checkbox-marked-circle-outline",
@@ -215,4 +215,4 @@ NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
 DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
 FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
-UPD_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "firmware"]
+UPD_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "update"]

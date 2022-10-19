@@ -64,7 +64,9 @@ async def async_setup_entry(hass, config_entry):
         datas["smart_drive_health"] = await hass.async_add_executor_job(api.get_smart_disk_health)
         datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
         datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
-        datas["update"] = await hass.async_add_executor_job(api.get_firmware_update)
+        try: datas["update"] = await hass.async_add_executor_job(api.get_firmware_update)
+        except: datas["update"] = "Up-to-date"
+            
         return datas
 
     coordinator = DataUpdateCoordinator(

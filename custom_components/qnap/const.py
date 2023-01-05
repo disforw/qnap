@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
-    TEMP_CELSIUS,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
     PERCENTAGE,
+    UnitOfTemperature,
 )
 
 ATTR_DRIVE = "Drive"
@@ -61,7 +61,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         stype="basic",
         key="system_temp",
         name="System Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS
         device_class=DEVICE_CLASS_TEMPERATURE,
         icon="mdi:thermometer",
         entity_registry_enabled_default=True,
@@ -71,7 +71,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         stype="cpu",
         key="cpu_temp",
         name="CPU Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS
         device_class=DEVICE_CLASS_TEMPERATURE,
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
@@ -149,7 +149,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         stype="drive",
         key="drive_temp",
         name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS
         icon="mdi:thermometer",
         entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,

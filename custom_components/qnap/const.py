@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorStateClass,
     SensorEntityDescription,
 )
 from homeassistant.const import (
@@ -62,20 +62,20 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="cpu",
         key="cpu_temp",
         name="CPU Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="cpu",
@@ -84,7 +84,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="memory",
@@ -93,7 +93,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="memory",
@@ -102,7 +102,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="memory",
@@ -111,7 +111,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="network",
@@ -127,7 +127,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
         icon="mdi:upload",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="network",
@@ -136,7 +136,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
         icon="mdi:download",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="drive",
@@ -152,7 +152,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="folder",
@@ -161,7 +161,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="folder",
@@ -170,7 +170,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="volume",
@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="volume",
@@ -188,7 +188,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="volume",
@@ -197,7 +197,7 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

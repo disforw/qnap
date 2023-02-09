@@ -4,9 +4,9 @@
   "config_flow": true,
   "version": "10.0",
   "dependencies": ["persistent_notification"],
-  "documentation": "https://www.home-assistant.io/integrations/qnap",
   "requirements": ["qnapstats==0.4.0"],
   "codeowners": ["@colinodell", "@disforw"],
+  "documentation": "https://www.home-assistant.io/integrations/qnap", 
   "iot_class": "local_polling",
   "integration_type": "device"
 }

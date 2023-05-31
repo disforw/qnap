@@ -41,14 +41,6 @@ NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
 VOLUME_NAME = "volume"
 
-
-@dataclass
-class QNapSensorEntityDescription(SensorEntityDescription):
-    """Represents an Flow Sensor."""
-
-    stype: str | None = None
-
-
 SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="basic",

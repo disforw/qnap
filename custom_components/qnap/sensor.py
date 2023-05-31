@@ -1,25 +1,24 @@
 """Support for QNAP NAS Sensors."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_NAME, DATA_GIBIBYTES
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from dataclasses import dataclass
 from homeassistant.components.sensor import (
+    SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    ATTR_NAME,
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfInformation,
     UnitOfDataRate,
 )
-
 
 from .const import (
     ATTR_DRIVE,
@@ -359,7 +358,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
+            return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
 class QNAPSystemSensor(QNAPSensor):
@@ -484,7 +483,7 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self.coordinator.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
+            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"}
 
 
 class QNAPFolderSensor(QNAPSensor):
@@ -519,6 +518,6 @@ class QNAPFolderSensor(QNAPSensor):
             volume_name = self.monitor_device
 
             return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}",
+                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}",
                 VOLUME_NAME: volume_name,
             }

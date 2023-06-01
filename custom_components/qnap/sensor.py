@@ -278,6 +278,13 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
+BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
+CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
+MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
+NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
+DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
+FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
+VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
     
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""

@@ -35,15 +35,8 @@ from .const import (
     ATTR_TYPE,
     ATTR_UPTIME,
     ATTR_VOLUME_SIZE,
-    BAS_SENSOR,
-    CPU_SENSOR,
     DEFAULT_NAME,
     DOMAIN,
-    DRI_SENSOR,
-    FOL_SENSOR,
-    MEM_SENSOR,
-    NET_SENSOR,
-    VOL_SENSOR,
     VOLUME_NAME,
 )
 

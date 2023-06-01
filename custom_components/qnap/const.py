@@ -26,11 +26,3 @@ DOMAIN = "qnap"
 NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
 VOLUME_NAME = "volume"
-
-BAS_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "basic"]
-CPU_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "cpu"]
-MEM_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "memory"]
-NET_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "network"]
-DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
-FOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "folder"]
-VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]

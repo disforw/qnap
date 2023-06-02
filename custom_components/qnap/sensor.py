@@ -126,7 +126,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         key="status",
         name="Health",
         icon="mdi:checkbox-marked-circle-outline",
-        entity_registry_enabled_default=True,
     ),
     QNapSensorEntityDescription(
         stype="basic",
@@ -135,7 +134,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         icon="mdi:thermometer",
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
@@ -154,7 +152,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         name="CPU Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
@@ -181,7 +178,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         name="Memory Usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     QNapSensorEntityDescription(
@@ -189,7 +185,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         key="network_link_status",
         name="Network Link",
         icon="mdi:checkbox-marked-circle-outline",
-        entity_registry_enabled_default=True,
     ),
     QNapSensorEntityDescription(
         stype="network",
@@ -267,7 +262,6 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
         name="Volume Used",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chart-pie",
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

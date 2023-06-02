@@ -1,12 +1,12 @@
 {
   "domain": "qnap",
   "name": "QNAP",
-  "config_flow": true,
-  "version": "10.0",
-  "dependencies": ["persistent_notification"],
-  "requirements": ["qnapstats==0.4.0"],
   "codeowners": ["@disforw"],
-  "documentation": "https://www.home-assistant.io/integrations/qnap", 
+  "config_flow": true,
+  "dependencies": ["persistent_notification"],
+  "documentation": "https://www.home-assistant.io/integrations/qnap",
   "iot_class": "local_polling",
-  "integration_type": "device"
+  "integration_type": "device",
+  "requirements": ["qnapstats==0.4.0"],
+  "version": "10.0"
 }

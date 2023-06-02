@@ -292,10 +292,6 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def unique_id(self):
         """Return unique_id."""
         return f"{self.uid}_{self.name}"
-
-    @property
-    def coordinator_context(self):
-        return None
     
     @property
     def name(self):

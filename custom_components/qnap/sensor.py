@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from dataclasses import dataclass
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -281,6 +280,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
         self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(self)
         self.coordinator = coordinator
         self.entity_description = description
         self.uid = uid

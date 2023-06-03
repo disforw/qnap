@@ -77,7 +77,7 @@ async def async_setup_entry(
     # Drive sensors
     sensors.extend(
         [
-            QNAPDriveSensor(coordinator, description, uid, drive
+            QNAPDriveSensor(coordinator, description, uid, drive)
             for drive in coordinator.data["smart_drive_health"]
             for description in DRI_SENSOR
         ]

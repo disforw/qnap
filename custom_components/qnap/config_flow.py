@@ -43,13 +43,8 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize."""
-        self.is_imported = False
-
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        self.is_imported = True
         return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):
@@ -83,11 +78,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 title = stats["system"]["name"].capitalize()
-                if self.is_imported:
-                    _LOGGER.warning(
-                        "The import of the QNAP configuration was successful. \
-                        Please remove the platform from the YAML configuration file"
-                    )
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(

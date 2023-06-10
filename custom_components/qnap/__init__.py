@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .coordinator import QnapCoordinator
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
@@ -39,27 +40,7 @@ async def async_setup_entry(hass, config_entry):
         verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
         timeout=DEFAULT_TIMEOUT,
     )
-
-    async def async_update_data():
-        datas = {}
-        datas["system_stats"] = await hass.async_add_executor_job(api.get_system_stats)
-        datas["system_health"] = await hass.async_add_executor_job(
-            api.get_system_health
-        )
-        datas["smart_drive_health"] = await hass.async_add_executor_job(
-            api.get_smart_disk_health
-        )
-        datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
-        datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
-        return datas
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=UPDATE_INTERVAL,
-    )
+    coordinator = QnapCoordinator(hass, api)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

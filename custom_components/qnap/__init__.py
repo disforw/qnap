@@ -1,6 +1,4 @@
 """The qnap component."""
-from datetime import timedelta
-import logging
 
 from qnapstats import QNAPStats
 
@@ -16,8 +14,6 @@ from homeassistant.const import (
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import QnapCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,

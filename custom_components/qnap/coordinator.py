@@ -18,7 +18,7 @@ class QnapCoordinator(DataUpdateCoordinator[None]):
     def __init__(self, hass: HomeAssistant, api: QNAPStats) -> None:
         """Initialize the qnap coordinator."""
         super().__init__(
-            hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL
+            hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL
         )
 
         self.api = api

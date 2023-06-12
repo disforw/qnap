@@ -39,6 +39,7 @@ from .const import (
     DOMAIN,
 
 )
+from .coordinator import QnapCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -246,14 +247,14 @@ DRI_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "drive"]
 VOL_SENSOR = [desc for desc in SENSOR_TYPES if desc.stype == "volume"]
 
 
-class QNAPSensor(CoordinatorEntity, SensorEntity):
+class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-        self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
+        self, coordinator: QnapCoordinator, description, uid, monitor_device=None, monitor_subdevice=None
     ) -> None:
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.entity_description = description
         self.uid = uid
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
@@ -274,7 +275,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return f"{self.device_name} {self.monitor_device} - {self.entity_description.name}"
+            return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
         return f"{self.device_name} {self.entity_description.name}"
 
     @property

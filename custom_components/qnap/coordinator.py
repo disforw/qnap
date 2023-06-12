@@ -7,7 +7,7 @@ from qnapstats import QNAPStats
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from typing import Any, ConfigType
+from typing import Any
 
 from .const import DOMAIN
 UPDATE_INTERVAL = timedelta(minutes=1)

@@ -51,9 +51,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = QnapCoordinator(hass, config_entry)
-     if not coordinator:
-         raise PlatformNotReady
+    if not (coordinator := QnapCoordinator(hass, config_entry)):
+        raise PlatformNotReady
     uid = config_entry.unique_id
     sensors: list[QNAPSensor] = []
 

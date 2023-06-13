@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-
-from qnapstats import QNAPStats
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,26 +14,22 @@ from homeassistant.const import (
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import QnapCoordinator
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     hass.data.setdefault(DOMAIN, {})
-    if not (coordinator := QnapCoordinator(hass, config_entry)):
-        raise PlatformNotReady
-    
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
-
+    if not (coordinator := hass.data[DOMAIN].get(entry.entry_id)):
+        coordinator = QnapCoordinator(hass, config)
+        # Fetch initial data so we have data when entities subscribe
+        await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 

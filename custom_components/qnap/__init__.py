@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     hass.data.setdefault(DOMAIN, {})
-    if not (coordinator := QnapCoordinator(hass, config_entry):
+    if not (coordinator := QnapCoordinator(hass, config_entry)):
         raise PlatformNotReady
     
     # Fetch initial data so we have data when entities subscribe

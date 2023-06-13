@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.exceptions import PlatformNotReady
 
 from .const import (
     ATTR_DRIVE,
@@ -50,7 +51,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = QnapCoordinator(hass, config_entry)
+     if not coordinator:
+         raise PlatformNotReady
     uid = config_entry.unique_id
     sensors: list[QNAPSensor] = []
 
@@ -251,7 +254,12 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
     """Base class for a QNAP sensor."""
 
     def __init__(
-        self, coordinator: QnapCoordinator, description, uid, monitor_device=None, monitor_subdevice=None
+        self, 
+        coordinator: QnapCoordinator,
+        description,
+        uid,
+        monitor_device=None,
+        monitor_subdevice=None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

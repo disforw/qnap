@@ -1,17 +1,27 @@
 """Data coordinator for the qnap integration."""
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
-from qnapstats import QNAPStats
+import logging
 from typing import Any
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.typing import ConfigType
+from qnapstats import QNAPStats
 
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,9 +32,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the qnap coordinator."""
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL
-        )
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
         protocol = "https" if config[CONF_SSL] else "http"
         self._api = QNAPStats(
@@ -39,7 +47,9 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         datas: dict[str, dict[str, Any]] = {}
-        datas["system_stats"] = await self.hass.async_add_executor_job(self._api.get_system_stats)
+        datas["system_stats"] = await self.hass.async_add_executor_job(
+            self._api.get_system_stats
+        )
         datas["system_health"] = await self.hass.async_add_executor_job(
             self._api.get_system_health
         )
@@ -47,5 +57,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             self._api.get_smart_disk_health
         )
         datas["volumes"] = await self.hass.async_add_executor_job(self._api.get_volumes)
-        datas["bandwidth"] = await self.hass.async_add_executor_job(self._api.get_bandwidth)
+        datas["bandwidth"] = await self.hass.async_add_executor_job(
+            self._api.get_bandwidth
+        )
         return datas

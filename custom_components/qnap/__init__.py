@@ -14,6 +14,7 @@ from homeassistant.const import (
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import QnapCoordinator
+from homeassistant.exceptions import PlatformNotReady
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,

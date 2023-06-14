@@ -2,17 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    Platform,
-)
+from homeassistant.const import Platform
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .const import DOMAIN
 from .coordinator import QnapCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady

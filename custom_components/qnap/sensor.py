@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -259,9 +260,9 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.uid)},
             name=self.device_name,
-            model: self.coordinator.data["system_stats"]["system"]["model"],
-            sw_version: self.coordinator.data["system_stats"]["firmware"]["version"],
-            manufacturer: DEFAULT_NAME,
+            model=self.coordinator.data["system_stats"]["system"]["model"],
+            sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
+            manufacturer=DEFAULT_NAME,
         )
 
     @property

@@ -276,15 +276,6 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
             return f"{self.device_name} {self.entity_description.name} ({self.monitor_device})"
         return f"{self.device_name} {self.entity_description.name}"
 
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.uid)},
-            "name": self.device_name,
-            
-        }
-
 
 class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""

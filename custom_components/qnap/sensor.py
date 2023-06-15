@@ -263,11 +263,6 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         return f"{self.uid}_{self.name}"
 
     @property
-    def coordinator_context(self):
-        """Helpers update_coordinator."""
-        return None
-
-    @property
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:

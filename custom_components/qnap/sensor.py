@@ -326,35 +326,6 @@ class QNAPMemorySensor(QNAPSensor):
             return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
 
 
-class QNAPSystemSensor(QNAPSensor):
-    """A QNAP sensor that monitors overall system health."""
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.entity_description.key == "status":
-            return self.coordinator.data["system_health"]
-
-        if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]
-            days = int(data["uptime"]["days"])
-            hours = int(data["uptime"]["hours"])
-            minutes = int(data["uptime"]["minutes"])
-
-            return {
-                ATTR_NAME: data["system"]["name"],
-                ATTR_MODEL: data["system"]["model"],
-                ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
-            }
-
-
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
@@ -385,6 +356,35 @@ class QNAPNetworkSensor(QNAPSensor):
                 ATTR_PACKETS_TX: data["tx_packets"],
                 ATTR_PACKETS_RX: data["rx_packets"],
                 ATTR_PACKETS_ERR: data["err_packets"],
+            }
+
+
+class QNAPSystemSensor(QNAPSensor):
+    """A QNAP sensor that monitors overall system health."""
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if self.entity_description.key == "status":
+            return self.coordinator.data["system_health"]
+
+        if self.entity_description.key == "system_temp":
+            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if self.coordinator.data:
+            data = self.coordinator.data["system_stats"]
+            days = int(data["uptime"]["days"])
+            hours = int(data["uptime"]["hours"])
+            minutes = int(data["uptime"]["minutes"])
+
+            return {
+                ATTR_NAME: data["system"]["name"],
+                ATTR_MODEL: data["system"]["model"],
+                ATTR_SERIAL: data["system"]["serial_number"],
+                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
             }
 
 

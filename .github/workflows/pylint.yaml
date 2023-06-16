@@ -1,8 +1,0 @@
-name: Pylint
-on: [ push, pull_request ]
-jobs:
-  ruff:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Pylint action
-        uses: gabriel-milan/action-pylint@v1

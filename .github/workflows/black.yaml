@@ -1,8 +1,0 @@
-name: Black
-on: [ push, pull_request ]
-jobs:
-  ruff:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Python Black
-        uses: cytopia/docker-black@0.11

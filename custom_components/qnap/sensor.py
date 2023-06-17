@@ -21,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -45,7 +47,7 @@ ATTR_UPTIME = "Uptime"
 ATTR_VOLUME_SIZE = "Volume Size"
 
 
-_SYS_SENSORS: tuple[SensorEntityDescription, ...] = (
+_SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
         name="Status",
@@ -60,7 +62,7 @@ _SYS_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
+_CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cpu_temp",
         name="CPU Temperature",
@@ -78,7 +80,7 @@ _CPU_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_MEM_SENSORS: tuple[SensorEntityDescription, ...] = (
+_MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         name="Memory Available",
@@ -103,7 +105,7 @@ _MEM_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_NET_SENSORS: tuple[SensorEntityDescription, ...] = (
+_NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_link_status",
         name="Network Link",
@@ -126,7 +128,7 @@ _NET_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_DRI_SENSORS: tuple[SensorEntityDescription, ...] = (
+_DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_smart_status",
         name="SMART Status",
@@ -142,7 +144,7 @@ _DRI_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-_VOL_SENSORS: tuple[SensorEntityDescription, ...] = (
+_VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume_size_used",
         name="Used Space",
@@ -169,6 +171,31 @@ _VOL_SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the qnap sensor platform from yaml."""
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.8.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        )
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
@@ -185,18 +212,18 @@ async def async_setup_entry(
     sensors.extend(
         [
             QNAPSystemSensor(coordinator, description, uid)
-            for description in _SYS_SENSORS
+            for description in _SYSTEM_MON_COND
         ]
     )
 
     sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_SENSORS]
+        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_MON_COND]
     )
 
     sensors.extend(
         [
             QNAPMemorySensor(coordinator, description, uid)
-            for description in _MEM_SENSORS
+            for description in _MEMORY_MON_COND
         ]
     )
 
@@ -205,7 +232,7 @@ async def async_setup_entry(
         [
             QNAPNetworkSensor(coordinator, description, uid, nic)
             for nic in coordinator.data["system_stats"]["nics"]
-            for description in _NET_SENSORS
+            for description in _NETWORK_MON_COND
         ]
     )
 
@@ -214,7 +241,7 @@ async def async_setup_entry(
         [
             QNAPDriveSensor(coordinator, description, uid, drive)
             for drive in coordinator.data["smart_drive_health"]
-            for description in _DRI_SENSORS
+            for description in _DRIVE_MON_COND
         ]
     )
 
@@ -223,7 +250,7 @@ async def async_setup_entry(
         [
             QNAPVolumeSensor(coordinator, description, uid, volume)
             for volume in coordinator.data["volumes"]
-            for description in _VOL_SENSORS
+            for description in _VOLUME_MON_COND
         ]
     )
     async_add_entities(sensors)
@@ -258,7 +285,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
         self.monitor_subdevice = monitor_subdevice
-        self.coordinator_context=None
+        self.coordinator_context = None
         self._attr_unique_id = f"{self.uid}_{self.device_name}_{self.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.uid)},
@@ -384,7 +411,12 @@ class QNAPDriveSensor(QNAPSensor):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        return f"{self.device_name} Drive {self.monitor_device} - {self.entity_description.name}"
+        server_name = self.coordinator.data["system_stats"]["system"]["name"]
+
+        return (
+            f"{server_name} {self.entity_description.name} (Drive"
+            f" {self.monitor_device})"
+        )
 
     @property
     def native_value(self):

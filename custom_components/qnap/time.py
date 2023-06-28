@@ -65,55 +65,8 @@ async def async_setup_entry(
             for description in _SYS_SENSORS
         ]
     )
-
-    sensors.extend(
-        [QNAPCPUSensor(coordinator, description, uid) for description in _CPU_SENSORS]
-    )
-
-    sensors.extend(
-        [
-            QNAPMemorySensor(coordinator, description, uid)
-            for description in _MEM_SENSORS
-        ]
-    )
-
-    # Network sensors
-    sensors.extend(
-        [
-            QNAPNetworkSensor(coordinator, description, uid, nic)
-            for nic in coordinator.data["system_stats"]["nics"]
-            for description in _NET_SENSORS
-        ]
-    )
-
-    # Drive sensors
-    sensors.extend(
-        [
-            QNAPDriveSensor(coordinator, description, uid, drive)
-            for drive in coordinator.data["smart_drive_health"]
-            for description in _DRI_SENSORS
-        ]
-    )
-
-    # Volume sensors
-    sensors.extend(
-        [
-            QNAPVolumeSensor(coordinator, description, uid, volume)
-            for volume in coordinator.data["volumes"]
-            for description in _VOL_SENSORS
-        ]
-    )
     async_add_entities(sensors)
 
-
-def round_nicely(number):
-    """Round a number based on its size (so it looks nice)."""
-    if number < 10:
-        return round(number, 2)
-    if number < 100:
-        return round(number, 1)
-
-    return round(number)
 
 
 class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
@@ -159,26 +112,12 @@ class QNAPSystemTime(QNAPSensor):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self.entity_description.key == "status":
-            return self.coordinator.data["system_health"]
-
-        if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]
             days = int(data["uptime"]["days"])
             hours = int(data["uptime"]["hours"])
             minutes = int(data["uptime"]["minutes"])
 
-            return {
-                ATTR_NAME: data["system"]["name"],
-                ATTR_MODEL: data["system"]["model"],
-                ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
-            }
+            return f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m"
 
 

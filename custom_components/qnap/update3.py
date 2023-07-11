@@ -60,10 +60,7 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
-        self.monitor_device = monitor_device
         self._attr_unique_id = f"{unique_id}_{description.key}"
-        if monitor_device:
-            self._attr_unique_id = f"{self._attr_unique_id}_{monitor_device}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=self.device_name,
@@ -71,3 +68,9 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
             sw_version=self.coordinator.data["system_stats"]["firmware"]["version"],
             manufacturer="QNAP",
         )
+
+    @property
+    def current_version(self) -> str | None:
+        """Version currently in use."""
+        return self.coordinator.data["system_stats"]["firmware"]["version"]  # type: ignore[no-any-return]
+

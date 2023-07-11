@@ -1,15 +1,11 @@
 """Support for QNAP NAS update platform."""
-from __future__ import annotations
-
 from typing import Final
-
-from yarl import URL
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription, UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,16 +25,16 @@ UPDATE_ENTITIES: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
 
     """Set up entry."""
     coordinator = QnapCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
+    uawait coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady
-    uid = config_entry.unique_id
+    id = config_entry.unique_id
     assert uid is not None
 
     async_add_entities(
@@ -70,7 +66,11 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
         )
 
     @property
-    def current_version(self) -> str | None:
+    def installed_version(self) -> str | None:
         """Version currently in use."""
-        return self.coordinator.data["system_stats"]["firmware"]["version"]  # type: ignore[no-any-return]
+        return self.coordinator.data["system_stats"]["firmware"]["version"]
 
+    @property
+    def latest_version(self) -> str | None:
+        """Version currently in use."""
+        return "1.7"

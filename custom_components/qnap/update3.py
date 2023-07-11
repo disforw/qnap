@@ -19,7 +19,7 @@ from .const import (
 from .coordinator import QnapCoordinator
 
 UPDATE_ENTITIES: Final = [
-  SensorEntityDescription(
+  UpdateEntityDescription(
     key="update",
     name="Update",
     entity_category=EntityCategory.DIAGNOSTIC,
@@ -52,12 +52,12 @@ async def async_setup_entry(
 
 
 class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
-    """Base class for a QNAP sensor."""
+    """Base class for a QNAP update entity."""
 
     def __init__(
         self,
         coordinator: QnapCoordinator,
-        description: SensorEntityDescription,
+        description: UpdateEntityDescription,
         unique_id: str,
         monitor_device: str | None = None,
     ) -> None:

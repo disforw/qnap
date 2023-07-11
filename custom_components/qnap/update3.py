@@ -23,6 +23,7 @@ UPDATE_ENTITIES: Final = [
     key="update",
     name="Update",
     entity_category=EntityCategory.DIAGNOSTIC,
+    device_class=UpdateDeviceClass.FIRMWARE,
   )
 ]
 
@@ -32,6 +33,7 @@ async def async_setup_entry(
     config_entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+
     """Set up entry."""
     coordinator = QnapCoordinator(hass, config_entry)
     await coordinator.async_refresh()
@@ -39,16 +41,11 @@ async def async_setup_entry(
         raise PlatformNotReady
     uid = config_entry.unique_id
     assert uid is not None
-    sensors: list[QNAPSensor] = []
 
-    sensors.extend(
-        [
-            QNAPSystemSensor(coordinator, description, uid)
-            for description in _SYSTEM_MON_COND
-        ]
+    async_add_entities(
+        QNAPUpdateEntity(coordinator, description, uid)
+        for description in UPDATE_ENTITIES
     )
-
-    async_add_entities(sensors)
 
 
 class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
@@ -59,7 +56,6 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
         coordinator: QnapCoordinator,
         description: UpdateEntityDescription,
         unique_id: str,
-        monitor_device: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

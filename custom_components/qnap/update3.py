@@ -5,11 +5,11 @@ from typing import Final
 
 from yarl import URL
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
+from homeassistant.components.update import UpdateEntity, UpdateEntityDescription, UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

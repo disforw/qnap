@@ -10,6 +10,7 @@ from .coordinator import QnapCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 

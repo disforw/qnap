@@ -28,10 +28,10 @@ async def async_setup_entry(
 
     """Set up entry."""
     coordinator = QnapCoordinator(hass, config_entry)
-    uawait coordinator.async_refresh()
+    await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady
-    id = config_entry.unique_id
+    uid = config_entry.unique_id
     assert uid is not None
 
     async_add_entities(

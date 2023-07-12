@@ -16,9 +16,6 @@ from .coordinator import QnapCoordinator
 UPDATE_ENTITIES: Final = [
   UpdateEntityDescription(
     key="update",
-    name="Update",
-    entity_category=EntityCategory.DIAGNOSTIC,
-    device_class=UpdateDeviceClass.FIRMWARE,
   )
 ]
 
@@ -45,6 +42,9 @@ async def async_setup_entry(
 
 class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
     """Base class for a QNAP update entity."""
+    _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_has_entity_name = True
+    _attr_name = "Firmware"
 
     def __init__(
         self,
@@ -73,4 +73,4 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Version currently in use."""
-        return "1.7"
+        return self.coordinator.sync_firmware_update()

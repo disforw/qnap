@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import QnapCoordinator
 
-UPDATE_ENTITIES: Final = [
+UPDATE_ENTITIES = [
   UpdateEntityDescription(
     key="update",
   )
@@ -72,5 +72,5 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
 
     @property
     def latest_version(self) -> str | None:
-        """Version currently in use."""
+        """Version update available."""
         return self.coordinator.sync_firmware_update()

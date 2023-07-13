@@ -73,4 +73,6 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Version update available."""
-        return self.coordinator.data["firmware"]
+        if version := self.coordinator.data["firmware"] is not None:
+            return version
+        else: return self.coordinator.data["system_stats"]["firmware"]["version"]

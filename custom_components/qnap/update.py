@@ -73,4 +73,4 @@ class QNAPUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Version update available."""
-        return self.coordinator.sync_firmware_update()
+        return self.coordinator.data["firmware"]

@@ -47,9 +47,9 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     def _sync_update(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
         try:
-            ifirmware = self._api.get_firmware_update()
+            is_firmware = self._api.get_firmware_update()
         except:
-            ifirmware = "6"
+            is_firmware = None
             
         return {
             "system_stats": self._api.get_system_stats(),
@@ -57,7 +57,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             "smart_drive_health": self._api.get_smart_disk_health(),
             "volumes": self._api.get_volumes(),
             "bandwidth": self._api.get_bandwidth(),
-            "firmware": ifirmware,
+            "firmware": is_firmware,
         }
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:

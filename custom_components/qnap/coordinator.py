@@ -46,12 +46,18 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
     def _sync_update(self) -> dict[str, dict[str, Any]]:
         """Get the latest data from the Qnap API."""
+        try:
+            ifirmware = self._api.get_firmware_update()
+        except:
+            ifirmware = "6"
+            
         return {
             "system_stats": self._api.get_system_stats(),
             "system_health": self._api.get_system_health(),
             "smart_drive_health": self._api.get_smart_disk_health(),
             "volumes": self._api.get_volumes(),
             "bandwidth": self._api.get_bandwidth(),
+            "firmware": ifirmware,
         }
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
@@ -61,6 +67,3 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             raise UpdateFailed("Error communicating with QNAP device")
         return result
 
-    def sync_firmware_update(self) -> None:
-        #return await self.hass.async_add_executor_job(self._api.get_firmware_update())
-        return "6.5"

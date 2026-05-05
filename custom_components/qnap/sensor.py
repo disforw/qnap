@@ -277,6 +277,11 @@ class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
     @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
+
+    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         iface = next(
@@ -324,6 +329,11 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
+
+    @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         drive = next(
@@ -356,6 +366,11 @@ class QNAPDriveSensor(QNAPSensor):
 
 class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
+
+    @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
 
     @property
     def native_value(self) -> float | None:

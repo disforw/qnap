@@ -1,4 +1,5 @@
 """Config flow to configure qnap component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,23 +9,18 @@ from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_DRIVES,
-    CONF_NICS,
-    CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
@@ -46,46 +42,48 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Qnap configuration flow."""
 
     VERSION = 1
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Set the config entry up from yaml."""
-        import_info.pop(CONF_MONITORED_CONDITIONS, None)
-        import_info.pop(CONF_NICS, None)
-        import_info.pop(CONF_DRIVES, None)
-        import_info.pop(CONF_VOLUMES, None)
-        return await self.async_step_user(import_info)
+    async def _async_validate_input(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], dict[str, Any] | None]:
+        """Validate user input by connecting to the QNAP device."""
+        errors: dict[str, str] = {}
+        host = user_input[CONF_HOST]
+        protocol = "https" if user_input[CONF_SSL] else "http"
+        api = QNAPStats(
+            host=f"{protocol}://{host}",
+            port=user_input[CONF_PORT],
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            verify_ssl=user_input[CONF_VERIFY_SSL],
+            timeout=DEFAULT_TIMEOUT,
+        )
+        try:
+            stats = await self.hass.async_add_executor_job(api.get_system_stats)
+        except ConnectTimeout:
+            errors["base"] = "cannot_connect"
+        except TypeError:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected error")
+            errors["base"] = "unknown"
+        else:
+            return errors, stats
+        return errors, None
 
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            protocol = "https" if user_input[CONF_SSL] else "http"
-            api = QNAPStats(
-                host=f"{protocol}://{host}",
-                port=user_input[CONF_PORT],
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                verify_ssl=user_input[CONF_VERIFY_SSL],
-                timeout=DEFAULT_TIMEOUT,
-            )
-            try:
-                stats = await self.hass.async_add_executor_job(api.get_system_stats)
-            except ConnectTimeout:
-                errors["base"] = "cannot_connect"
-            except TypeError:
-                errors["base"] = "invalid_auth"
-            except Exception as error:  # pylint: disable=broad-except
-                _LOGGER.error(error)
-                errors["base"] = "unknown"
-            else:
+            errors, stats = await self._async_validate_input(user_input)
+            if not errors and stats is not None:
                 unique_id = stats["system"]["serial_number"]
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
@@ -95,5 +93,35 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            errors, stats = await self._async_validate_input(user_input)
+            if not errors and stats is not None:
+                unique_id = stats["system"]["serial_number"]
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+
+        suggested_values: dict[str, Any] = dict(user_input or reconfigure_entry.data)
+        suggested_values.pop(CONF_PASSWORD, None)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA,
+                suggested_values,
+            ),
             errors=errors,
         )

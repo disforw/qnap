@@ -1,12 +1,15 @@
 """Data coordinator for the qnap integration."""
+
 from __future__ import annotations
 
+from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging
 from typing import Any
+import warnings
 
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectionError, HTTPError, ConnectTimeout
+import urllib3
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,46 +22,72 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+type QnapConfigEntry = ConfigEntry[QnapCoordinator]
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+@contextmanager
+def suppress_insecure_request_warning():
+    """Context manager to suppress InsecureRequestWarning.
+
+    Was added in here to solve the following issue, not being solved upstream.
+    https://github.com/colinodell/python-qnapstats/issues/96
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
+        yield
+
+
+class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Custom coordinator for the qnap integration."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    config_entry: QnapConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: QnapConfigEntry) -> None:
         """Initialize the qnap coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
 
         protocol = "https" if config_entry.data[CONF_SSL] else "http"
+        self._verify_ssl = config_entry.data.get(CONF_VERIFY_SSL)
+
         self._api = QNAPStats(
             f"{protocol}://{config_entry.data.get(CONF_HOST)}",
             config_entry.data.get(CONF_PORT),
             config_entry.data.get(CONF_USERNAME),
             config_entry.data.get(CONF_PASSWORD),
-            verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
+            verify_ssl=self._verify_ssl,
             timeout=config_entry.data.get(CONF_TIMEOUT),
         )
 
-    def _sync_update(self) -> dict[str, dict[str, Any]]:
+    def _sync_update(self) -> dict[str, Any]:
         """Get the latest data from the Qnap API."""
-        return {
-            "system_stats": self._api.get_system_stats(),
-            "system_health": self._api.get_system_health(),
-            "smart_drive_health": self._api.get_smart_disk_health(),
-            "volumes": self._api.get_volumes(),
-            "bandwidth": self._api.get_bandwidth(),
-        }
+        with (
+            suppress_insecure_request_warning()
+            if not self._verify_ssl
+            else nullcontext()
+        ):
+            return {
+                "system_stats": self._api.get_system_stats(),
+                "system_health": self._api.get_system_health(),
+                "smart_drive_health": self._api.get_smart_disk_health(),
+                "volumes": self._api.get_volumes(),
+                "bandwidth": self._api.get_bandwidth(),
+                "firmware_update": self._api.get_firmware_update(),
+            }
 
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Qnap API."""
-        try:
-            result = await self.hass.async_add_executor_job(self._sync_update)
-        except (ConnectionError, HTTPError, ConnectTimeout, TypeError, Exception) as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
-        return result
+        return await self.hass.async_add_executor_job(self._sync_update)

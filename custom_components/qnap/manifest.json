@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["qnapstats"],
   "requirements": ["qnapstats==0.4.0"],
-  "version": "10.0"
+  "version": "10.1"
 }

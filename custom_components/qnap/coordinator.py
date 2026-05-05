@@ -24,7 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_TIMEOUT, DEFAULT_VERIFY_SSL, DOMAIN
+from .container_station import ContainerStationClient
 
 type QnapConfigEntry = ConfigEntry[QnapCoordinator]
 
@@ -61,15 +62,31 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         protocol = "https" if config_entry.data[CONF_SSL] else "http"
-        self._verify_ssl = config_entry.data.get(CONF_VERIFY_SSL)
+        self._verify_ssl = config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        host = config_entry.data.get(CONF_HOST)
+        port = config_entry.data.get(CONF_PORT, DEFAULT_PORT)
+        username = config_entry.data.get(CONF_USERNAME)
+        password = config_entry.data.get(CONF_PASSWORD)
+        ssl = config_entry.data.get(CONF_SSL, DEFAULT_SSL)
+        timeout = config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
         self._api = QNAPStats(
-            f"{protocol}://{config_entry.data.get(CONF_HOST)}",
-            config_entry.data.get(CONF_PORT),
-            config_entry.data.get(CONF_USERNAME),
-            config_entry.data.get(CONF_PASSWORD),
+            f"{protocol}://{host}",
+            port,
+            username,
+            password,
             verify_ssl=self._verify_ssl,
-            timeout=config_entry.data.get(CONF_TIMEOUT),
+            timeout=timeout,
+        )
+
+        self.cs = ContainerStationClient(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            ssl=ssl,
+            verify_ssl=self._verify_ssl,
+            timeout=timeout,
         )
 
     def _sync_update(self) -> dict[str, Any]:
@@ -79,7 +96,7 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not self._verify_ssl
             else nullcontext()
         ):
-            return {
+            data: dict[str, Any] = {
                 "system_stats": self._api.get_system_stats(),
                 "system_health": self._api.get_system_health(),
                 "smart_drive_health": self._api.get_smart_disk_health(),
@@ -87,6 +104,21 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "bandwidth": self._api.get_bandwidth(),
                 "firmware_update": self._api.get_firmware_update(),
             }
+
+        # Container Station — fetched independently; failures are non-fatal
+        try:
+            # Reuse the QTS SID already obtained by qnapstats as Bearer token
+            sid = self._api._sid  # noqa: SLF001
+            if sid:
+                data["containers"] = self.cs.get_containers(sid)
+            else:
+                _LOGGER.debug("QTS SID not yet available, skipping Container Station poll")
+                data["containers"] = data.get("containers", [])
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Container Station unavailable: %s", err)
+            data["containers"] = data.get("containers", [])
+
+        return data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Qnap API."""

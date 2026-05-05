@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from qnap_client.models import NasData
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -56,14 +58,6 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="cpu_temp",
-        translation_key="cpu_temp",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
         key="cpu_usage",
         translation_key="cpu_usage",
         native_unit_of_measurement=PERCENTAGE,
@@ -75,7 +69,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_free",
         translation_key="memory_free",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
@@ -84,7 +78,7 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="memory_used",
         translation_key="memory_used",
-        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
@@ -100,14 +94,9 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
 )
 _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="network_link_status",
-        translation_key="network_link_status",
-        icon="mdi:checkbox-marked-circle-outline",
-    ),
-    SensorEntityDescription(
         key="network_tx",
         translation_key="network_tx",
-        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:upload",
         entity_registry_enabled_default=False,
@@ -116,7 +105,7 @@ _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="network_rx",
         translation_key="network_rx",
-        native_unit_of_measurement=UnitOfDataRate.MEBIBYTES_PER_SECOND,
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         icon="mdi:download",
         entity_registry_enabled_default=False,
@@ -169,7 +158,7 @@ _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
 
 
 def round_nicely(number: float) -> float:
-    """Round a number based on its size (so it looks nice)."""
+    """Round a number based on its size."""
     if number < 10:
         return round(number, 2)
     if number < 100:
@@ -186,6 +175,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     uid = config_entry.unique_id
     assert uid is not None
+    data: NasData = coordinator.data
+
     sensors: list[QNAPSensor] = []
 
     sensors.extend(
@@ -201,18 +192,18 @@ async def async_setup_entry(
         for description in _MEMORY_MON_COND
     )
     sensors.extend(
-        QNAPNetworkSensor(coordinator, description, uid, nic)
-        for nic in coordinator.data["system_stats"]["nics"]
+        QNAPNetworkSensor(coordinator, description, uid, iface.name)
+        for iface in data.network_interfaces
         for description in _NETWORK_MON_COND
     )
     sensors.extend(
-        QNAPDriveSensor(coordinator, description, uid, drive)
-        for drive in coordinator.data["smart_drive_health"]
+        QNAPDriveSensor(coordinator, description, uid, drive.drive_number)
+        for drive in data.drive_health
         for description in _DRIVE_MON_COND
     )
     sensors.extend(
-        QNAPVolumeSensor(coordinator, description, uid, volume)
-        for volume in coordinator.data["volumes"]
+        QNAPVolumeSensor(coordinator, description, uid, vol.name)
+        for vol in data.volumes
         for description in _VOLUME_MON_COND
     )
     async_add_entities(sensors)
@@ -228,20 +219,20 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         coordinator: QnapCoordinator,
         description: SensorEntityDescription,
         unique_id: str,
-        monitor_device: str | None = None,
+        monitor_device: str | int | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self.monitor_device = monitor_device
         self._attr_unique_id = f"{unique_id}_{description.key}"
-        if monitor_device:
+        if monitor_device is not None:
             self._attr_unique_id = f"{self._attr_unique_id}_{monitor_device}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=coordinator.data["system_stats"]["system"]["name"],
-            model=coordinator.data["system_stats"]["system"]["model"],
-            sw_version=coordinator.data["system_stats"]["firmware"]["version"],
+            name=coordinator.data.system_info.name,
+            model=coordinator.data.system_info.model,
+            sw_version=coordinator.data.system_info.firmware_version,
             manufacturer="QNAP",
         )
 
@@ -252,10 +243,8 @@ class QNAPCPUSensor(QNAPSensor):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.entity_description.key == "cpu_temp":
-            return self.coordinator.data["system_stats"]["cpu"]["temp_c"]
         if self.entity_description.key == "cpu_usage":
-            return self.coordinator.data["system_stats"]["cpu"]["usage_percent"]
+            return round(self.coordinator.data.system_info.cpu_usage_percent, 1)
         return None
 
 
@@ -265,68 +254,55 @@ class QNAPMemorySensor(QNAPSensor):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        free = float(self.coordinator.data["system_stats"]["memory"]["free"]) / 1024
+        info = self.coordinator.data.system_info
         if self.entity_description.key == "memory_free":
-            return round_nicely(free)
-
-        total = float(self.coordinator.data["system_stats"]["memory"]["total"]) / 1024
-        used = total - free
-
+            return info.memory_free_mb
         if self.entity_description.key == "memory_used":
-            return round_nicely(used)
+            return info.memory_used_mb
         if self.entity_description.key == "memory_percent_used":
-            return round(used / total * 100)
+            if info.memory_total_mb == 0:
+                return None
+            return round(info.memory_used_mb / info.memory_total_mb * 100)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]["memory"]
-            size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
-        return None
+        total = self.coordinator.data.system_info.memory_total_mb
+        return {ATTR_MEMORY_SIZE: f"{total} {UnitOfInformation.MEBIBYTES}"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
     @property
-    def native_value(self) -> str | float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.entity_description.key == "network_link_status":
-            nic = self.coordinator.data["system_stats"]["nics"].get(self.monitor_device)
-            if nic is None:
-                return None
-            return nic["link_status"]
-
-        data = self.coordinator.data["bandwidth"].get(self.monitor_device)
-        if data is None:
+        iface = next(
+            (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
+            None,
+        )
+        if iface is None:
             return None
-
         if self.entity_description.key == "network_tx":
-            return round_nicely(data["tx"] / 1024 / 1024)
+            return round_nicely(iface.tx_bytes_per_sec / 1024 / 1024)
         if self.entity_description.key == "network_rx":
-            return round_nicely(data["rx"] / 1024 / 1024)
+            return round_nicely(iface.rx_bytes_per_sec / 1024 / 1024)
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | int] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["system_stats"]["nics"].get(self.monitor_device)
-            if data is None:
-                return None
-            return {
-                ATTR_IP: data["ip"],
-                ATTR_MASK: data["mask"],
-                ATTR_MAC: data["mac"],
-                ATTR_MAX_SPEED: data["max_speed"],
-                ATTR_PACKETS_TX: data["tx_packets"],
-                ATTR_PACKETS_RX: data["rx_packets"],
-                ATTR_PACKETS_ERR: data["err_packets"],
-            }
-        return None
+        iface = next(
+            (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
+            None,
+        )
+        if iface is None:
+            return None
+        return {
+            ATTR_IP: iface.ip,
+            ATTR_MAC: iface.mac,
+        }
 
 
 class QNAPSystemSensor(QNAPSensor):
@@ -336,9 +312,10 @@ class QNAPSystemSensor(QNAPSensor):
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == "status":
-            return self.coordinator.data["system_health"]
+            return self.coordinator.data.system_health.status
         if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+            # system_temp not directly in NasData — not available from qnap_client yet
+            return None
         return None
 
 
@@ -348,30 +325,32 @@ class QNAPDriveSensor(QNAPSensor):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        data = self.coordinator.data["smart_drive_health"].get(self.monitor_device)
-        if data is None:
+        drive = next(
+            (d for d in self.coordinator.data.drive_health if d.drive_number == self.monitor_device),
+            None,
+        )
+        if drive is None:
             return None
-
         if self.entity_description.key == "drive_smart_status":
-            return data["health"]
+            return drive.health
         if self.entity_description.key == "drive_temp":
-            return int(data["temp_c"]) if data["temp_c"] is not None else None
+            return drive.temperature
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["smart_drive_health"].get(self.monitor_device)
-            if data is None:
-                return None
-            return {
-                ATTR_DRIVE: data["drive_number"],
-                ATTR_MODEL: data["model"],
-                ATTR_SERIAL: data["serial"],
-                ATTR_TYPE: data["type"],
-            }
-        return None
+        drive = next(
+            (d for d in self.coordinator.data.drive_health if d.drive_number == self.monitor_device),
+            None,
+        )
+        if drive is None:
+            return None
+        return {
+            ATTR_DRIVE: str(drive.drive_number),
+            ATTR_MODEL: drive.model,
+            ATTR_TYPE: "HDD/SSD",
+        }
 
 
 class QNAPVolumeSensor(QNAPSensor):
@@ -380,32 +359,33 @@ class QNAPVolumeSensor(QNAPSensor):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        data = self.coordinator.data["volumes"].get(self.monitor_device)
-        if data is None:
+        vol = next(
+            (v for v in self.coordinator.data.volumes if v.name == self.monitor_device),
+            None,
+        )
+        if vol is None:
             return None
 
-        free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
         if self.entity_description.key == "volume_size_free":
-            return round_nicely(free_gb)
-
-        total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
-        used_gb = total_gb - free_gb
-
+            return round_nicely(vol.free_bytes / 1024 / 1024 / 1024)
         if self.entity_description.key == "volume_size_used":
-            return round_nicely(used_gb)
+            return round_nicely(vol.used_bytes / 1024 / 1024 / 1024)
         if self.entity_description.key == "volume_percentage_used":
-            return round(used_gb / total_gb * 100)
+            if vol.total_bytes == 0:
+                return None
+            return round(vol.used_bytes / vol.total_bytes * 100)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        if self.coordinator.data:
-            data = self.coordinator.data["volumes"].get(self.monitor_device)
-            if data is None:
-                return None
-            total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
-            return {
-                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {UnitOfInformation.GIBIBYTES}"
-            }
-        return None
+        vol = next(
+            (v for v in self.coordinator.data.volumes if v.name == self.monitor_device),
+            None,
+        )
+        if vol is None:
+            return None
+        total_gb = round_nicely(vol.total_bytes / 1024 / 1024 / 1024)
+        return {
+            ATTR_VOLUME_SIZE: f"{total_gb} {UnitOfInformation.GIBIBYTES}",
+        }

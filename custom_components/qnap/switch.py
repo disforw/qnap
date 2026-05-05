@@ -71,7 +71,7 @@ class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
         container = self._get_container()
         if container is None:
             return None
-        return container.status == "running"
+        return container.state == "running"
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -83,6 +83,7 @@ class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
             "image": container.image,
             "container_type": container.type,
             "container_id": container.id[:12],
+            "state": container.state,
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
-from qnap_client import QnapClient, QnapError
-from qnap_client import ContainerStationClient as QnapContainerStationClient
+from qnap_client import ContainerStationClient, QnapClient, QnapError
 from qnap_client.models import NasData
 
 from homeassistant.config_entries import ConfigEntry
@@ -57,7 +55,7 @@ class QnapCoordinator(DataUpdateCoordinator[NasData]):
             verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             timeout=config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
-        self._cs = QnapContainerStationClient(self._api)
+        self._cs = ContainerStationClient(self._api)
 
     async def _async_setup(self) -> None:
         """Authenticate on first setup."""

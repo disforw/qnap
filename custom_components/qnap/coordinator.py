@@ -102,8 +102,15 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "smart_drive_health": self._api.get_smart_disk_health(),
                 "volumes": self._api.get_volumes(),
                 "bandwidth": self._api.get_bandwidth(),
-                "firmware_update": self._api.get_firmware_update(),
             }
+
+            # Firmware update check — fetched separately; a malformed or
+            # unexpected NAS API response should not fail the entire coordinator.
+            try:
+                data["firmware_update"] = self._api.get_firmware_update()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.debug("Firmware update check failed (non-fatal): %s", err)
+                data["firmware_update"] = None
 
         # Container Station — fetched independently; failures are non-fatal
         try:

@@ -26,7 +26,7 @@ from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_TIMEOUT, DEFAULT_VERIFY_SS
 
 type QnapConfigEntry = ConfigEntry[QnapCoordinator]
 
-UPDATE_INTERVAL = timedelta(minutes=1)
+UPDATE_INTERVAL = timedelta(minutes=5)
 
 _LOGGER = logging.getLogger(__name__)
 

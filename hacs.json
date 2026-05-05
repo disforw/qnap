@@ -1,7 +1,7 @@
 {
-    "name": "Qnap",
-    "domains": ["sensor"],
-    "homeassistant": "2021.5",
+    "name": "QNAP",
+    "domains": ["sensor", "switch", "update"],
+    "homeassistant": "2024.1",
     "render_readme": true,
-    "iot_class": "Local Push"
+    "iot_class": "local_polling"
 }

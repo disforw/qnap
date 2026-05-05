@@ -68,6 +68,12 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except TypeError:
             errors["base"] = "invalid_auth"
+        except KeyError as err:
+            _LOGGER.warning(
+                "Unexpected NAS API key during setup (qnapstats compatibility issue): %s",
+                err,
+            )
+            errors["base"] = "unknown"
         except Exception:
             _LOGGER.exception("Unexpected error")
             errors["base"] = "unknown"

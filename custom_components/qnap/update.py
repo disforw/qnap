@@ -39,27 +39,26 @@ class QNAPFirmwareUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             serial_number=unique_id,
-            name=coordinator.data["system_stats"]["system"]["name"],
-            model=coordinator.data["system_stats"]["system"]["model"],
-            sw_version=coordinator.data["system_stats"]["firmware"]["version"],
+            name=coordinator.data.system_info.name,
+            model=coordinator.data.system_info.model,
+            sw_version=coordinator.data.system_info.firmware_version,
             manufacturer="QNAP",
         )
 
     @property
     def installed_version(self) -> str | None:
         """Return the currently installed firmware version."""
-        return self.coordinator.data["system_stats"]["firmware"]["version"]
+        fw = self.coordinator.data.firmware_update
+        return fw.current_version if fw else None
 
     @property
     def latest_version(self) -> str | None:
         """Return the latest available firmware version.
 
-        Returns None when no update information is available or the
-        coordinator reports an error state (treated as up-to-date by Home
-        Assistant). Returns the version string when a firmware update is
-        available.
+        Returns None when no update info is available or when firmware
+        is up to date — HA treats None as up-to-date.
         """
-        available: str | None = self.coordinator.data.get("firmware_update")
-        if not available or available == "error":
+        fw = self.coordinator.data.firmware_update
+        if fw is None:
             return None
-        return available
+        return fw.latest_version

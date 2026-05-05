@@ -27,19 +27,14 @@ async def async_setup_entry(
     uid = config_entry.unique_id
     assert uid is not None
 
-    # Build initial set of switches from first coordinator data
-    containers: list[dict[str, Any]] = coordinator.data.get("containers", [])
     async_add_entities(
-        QNAPContainerSwitch(coordinator, uid, container)
-        for container in containers
+        QNAPContainerSwitch(coordinator, uid, container.name, container.id, container.type)
+        for container in coordinator.data.containers
     )
 
 
 class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
-    """A switch entity representing a Container Station container.
-
-    Turns on = running, turns off = stopped.
-    """
+    """A switch entity representing a Container Station container."""
 
     _attr_has_entity_name = True
     _attr_device_class = SwitchDeviceClass.SWITCH
@@ -48,65 +43,54 @@ class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
         self,
         coordinator: QnapCoordinator,
         unique_id: str,
-        container: dict[str, Any],
+        container_name: str,
+        container_id: str,
+        container_type: str,
     ) -> None:
         """Initialize the container switch."""
         super().__init__(coordinator)
-        self._container_name = container["name"]
-        self._container_id = container["id"]
-        self._container_type = container.get("type", "docker")
+        self._container_name = container_name
+        self._container_id = container_id
+        self._container_type = container_type
 
-        self._attr_unique_id = f"{unique_id}_container_{self._container_name}"
-        self._attr_name = self._container_name
+        self._attr_unique_id = f"{unique_id}_container_{container_name}"
+        self._attr_name = container_name
         self._attr_icon = "mdi:docker"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+    def _get_container(self):
+        """Return current container data from coordinator."""
+        return next(
+            (c for c in self.coordinator.data.containers if c.name == self._container_name),
+            None,
         )
-
-    def _get_container_data(self) -> dict[str, Any] | None:
-        """Return current data for this container from coordinator."""
-        for c in self.coordinator.data.get("containers", []):
-            if c["name"] == self._container_name:
-                return c
-        return None
 
     @property
     def is_on(self) -> bool | None:
         """Return True if container is running."""
-        container = self._get_container_data()
+        container = self._get_container()
         if container is None:
             return None
-        return container["status"] == "running"
+        return container.status == "running"
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return container image and type as extra attributes."""
-        container = self._get_container_data()
+        container = self._get_container()
         if container is None:
             return None
         return {
-            "image": container.get("image", ""),
-            "container_type": container.get("type", "docker"),
-            "container_id": container.get("id", "")[:12],
+            "image": container.image,
+            "container_type": container.type,
+            "container_id": container.id[:12],
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the container."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.cs.container_action,
-            self._container_id,
-            self._container_type,
-            "start",
-        )
+        await self.coordinator._cs.start_container(self._container_id, self._container_type)  # noqa: SLF001
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the container."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.cs.container_action,
-            self._container_id,
-            self._container_type,
-            "stop",
-        )
+        await self.coordinator._cs.stop_container(self._container_id, self._container_type)  # noqa: SLF001
         await self.coordinator.async_request_refresh()

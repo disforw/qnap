@@ -1,6 +1,6 @@
 {
     "name": "QNAP",
     "homeassistant": "2024.1",
-    "render_readme": true,
-    "iot_class": "local_polling"
+    "render_readme": true
 }
+

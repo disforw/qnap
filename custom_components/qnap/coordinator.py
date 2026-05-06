@@ -22,7 +22,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_TIMEOUT, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 type QnapConfigEntry = ConfigEntry[QnapCoordinator]
 

@@ -196,8 +196,7 @@ async def async_setup_entry(
         for description in _SYSTEM_MON_COND
     )
     sensors.extend(
-        QNAPCPUSensor(coordinator, description, uid)
-        for description in _CPU_MON_COND
+        QNAPCPUSensor(coordinator, description, uid) for description in _CPU_MON_COND
     )
     sensors.extend(
         QNAPMemorySensor(coordinator, description, uid)
@@ -249,7 +248,6 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         )
 
 
-
 class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
@@ -299,7 +297,11 @@ class QNAPNetworkSensor(QNAPSensor):
     def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         iface = next(
-            (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
+            (
+                i
+                for i in self.coordinator.data.network_interfaces
+                if i.name == self.monitor_device
+            ),
             None,
         )
         if iface is None:
@@ -316,7 +318,11 @@ class QNAPNetworkSensor(QNAPSensor):
     def extra_state_attributes(self) -> dict[str, str | int] | None:
         """Return the state attributes."""
         iface = next(
-            (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
+            (
+                i
+                for i in self.coordinator.data.network_interfaces
+                if i.name == self.monitor_device
+            ),
             None,
         )
         if iface is None:
@@ -358,7 +364,11 @@ class QNAPDriveSensor(QNAPSensor):
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         drive = next(
-            (d for d in self.coordinator.data.drives if d.drive_number == self.monitor_device),
+            (
+                d
+                for d in self.coordinator.data.drives
+                if d.drive_number == self.monitor_device
+            ),
             None,
         )
         if drive is None:
@@ -373,7 +383,11 @@ class QNAPDriveSensor(QNAPSensor):
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         drive = next(
-            (d for d in self.coordinator.data.drives if d.drive_number == self.monitor_device),
+            (
+                d
+                for d in self.coordinator.data.drives
+                if d.drive_number == self.monitor_device
+            ),
             None,
         )
         if drive is None:

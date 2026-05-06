@@ -28,7 +28,9 @@ async def async_setup_entry(
     assert uid is not None
 
     async_add_entities(
-        QNAPContainerSwitch(coordinator, uid, container.name, container.id, container.type)
+        QNAPContainerSwitch(
+            coordinator, uid, container.name, container.id, container.type
+        )
         for container in coordinator.data.containers
     )
 
@@ -61,7 +63,11 @@ class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
     def _get_container(self):
         """Return current container data from coordinator."""
         return next(
-            (c for c in self.coordinator.data.containers if c.name == self._container_name),
+            (
+                c
+                for c in self.coordinator.data.containers
+                if c.name == self._container_name
+            ),
             None,
         )
 
@@ -88,10 +94,14 @@ class QNAPContainerSwitch(CoordinatorEntity[QnapCoordinator], SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the container."""
-        await self.coordinator._cs.start_container(self._container_id, self._container_type)  # noqa: SLF001
+        await self.coordinator._cs.start_container(
+            self._container_id, self._container_type
+        )  # noqa: SLF001
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the container."""
-        await self.coordinator._cs.stop_container(self._container_id, self._container_type)  # noqa: SLF001
+        await self.coordinator._cs.stop_container(
+            self._container_id, self._container_type
+        )  # noqa: SLF001
         await self.coordinator.async_request_refresh()

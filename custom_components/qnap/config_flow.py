@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from qnapstats import QNAPStats
-from requests.exceptions import ConnectTimeout
+from qnap_client import QnapAuthError, QnapClient, QnapConnectionError, QnapTimeoutError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,33 +51,29 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], dict[str, Any] | None]:
         """Validate user input by connecting to the QNAP device."""
         errors: dict[str, str] = {}
-        host = user_input[CONF_HOST]
-        protocol = "https" if user_input[CONF_SSL] else "http"
-        api = QNAPStats(
-            host=f"{protocol}://{host}",
+        client = QnapClient(
+            host=user_input[CONF_HOST],
             port=user_input[CONF_PORT],
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
+            ssl=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
             timeout=DEFAULT_TIMEOUT,
         )
         try:
-            stats = await self.hass.async_add_executor_job(api.get_system_stats)
-        except ConnectTimeout:
-            errors["base"] = "cannot_connect"
-        except TypeError:
+            async with client:
+                info = await client.get_system_info()
+        except QnapAuthError:
             errors["base"] = "invalid_auth"
-        except KeyError as err:
-            _LOGGER.warning(
-                "Unexpected NAS API key during setup (qnapstats compatibility issue): %s",
-                err,
-            )
-            errors["base"] = "unknown"
+        except QnapConnectionError:
+            errors["base"] = "cannot_connect"
+        except QnapTimeoutError:
+            errors["base"] = "cannot_connect"
         except Exception:
-            _LOGGER.exception("Unexpected error")
+            _LOGGER.exception("Unexpected error during QNAP setup validation")
             errors["base"] = "unknown"
         else:
-            return errors, stats
+            return errors, {"serial_number": info.serial_number, "name": info.name}
         return errors, None
 
     async def async_step_user(
@@ -88,12 +83,12 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors, stats = await self._async_validate_input(user_input)
-            if not errors and stats is not None:
-                unique_id = stats["system"]["serial_number"]
+            errors, info = await self._async_validate_input(user_input)
+            if not errors and info is not None:
+                unique_id = info["serial_number"]
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                title = stats["system"]["name"]
+                title = info["name"]
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -111,9 +106,9 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            errors, stats = await self._async_validate_input(user_input)
-            if not errors and stats is not None:
-                unique_id = stats["system"]["serial_number"]
+            errors, info = await self._async_validate_input(user_input)
+            if not errors and info is not None:
+                unique_id = info["serial_number"]
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(

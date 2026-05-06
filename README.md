@@ -91,11 +91,11 @@ Container switches use the Container Station v3 API (QTS Bearer token auth for r
 
 ## ⚠️ Known Limitations
 
-- **Fan speed sensors** — Requires `qnapstats >= 0.6.0`, which has not been published to PyPI yet. Blocked on upstream maintainer.
-- **External drive sensors** — Requires `qnapstats >= 0.5.0`, same PyPI blocker. External USB drives connected to the NAS will not appear as drive entities.
-- **MFA authentication** — The underlying `qnapstats` library does not support TOTP/MFA. Accounts with MFA enforced cannot be used. Use a dedicated service account without MFA as a workaround.
-- **Detailed system health** — The `status` sensor returns only a summary (`normal`/`warning`/`error`). Granular per-subsystem health detail is not exposed by the `qnapstats` library.
-- **Some QNAP models with unusual NIC naming** (e.g., QNAP-473e with `eth_status5`) — Config flow setup may fail with an "unknown" error due to a qnapstats compatibility issue with certain NIC speed keys. This is a library-level bug; error is now logged clearly.
+- **Fan speed sensors** — Fan data parsing implemented in `qnap-client`; accuracy against real hardware not yet verified.
+- **External drive sensors** — Supported in `qnap-client`; accuracy against real hardware not yet verified.
+- **MFA authentication** — Not supported. The QNAP CGI API does not expose a TOTP endpoint. Use a dedicated service account without MFA.
+- **Detailed system health** — The `status` sensor returns only a summary (`Ready`/`Warning`/`Error`). Granular per-subsystem detail is not available via the CGI API.
+- **Some QNAP models with unusual NIC naming** (e.g., QNAP-473e) — If a NIC key is missing from the API response, it is skipped gracefully without crashing setup.
 
 ## 📋 What's New in v3.0
 

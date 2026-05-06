@@ -198,7 +198,7 @@ async def async_setup_entry(
     )
     sensors.extend(
         QNAPDriveSensor(coordinator, description, uid, drive.drive_number)
-        for drive in data.drive_health
+        for drive in data.drives
         for description in _DRIVE_MON_COND
     )
     sensors.extend(
@@ -237,6 +237,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
         )
 
 
+
 class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
@@ -244,7 +245,7 @@ class QNAPCPUSensor(QNAPSensor):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self.entity_description.key == "cpu_usage":
-            return round(self.coordinator.data.system_info.cpu_usage_percent, 1)
+            return round(self.coordinator.data.cpu.usage_percent, 1)
         return None
 
 
@@ -254,26 +255,31 @@ class QNAPMemorySensor(QNAPSensor):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        info = self.coordinator.data.system_info
+        mem = self.coordinator.data.memory
         if self.entity_description.key == "memory_free":
-            return info.memory_free_mb
+            return mem.free_mb
         if self.entity_description.key == "memory_used":
-            return info.memory_used_mb
+            return mem.used_mb
         if self.entity_description.key == "memory_percent_used":
-            if info.memory_total_mb == 0:
+            if mem.total_mb == 0:
                 return None
-            return round(info.memory_used_mb / info.memory_total_mb * 100)
+            return round(mem.used_mb / mem.total_mb * 100)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        total = self.coordinator.data.system_info.memory_total_mb
+        total = self.coordinator.data.memory.total_mb
         return {ATTR_MEMORY_SIZE: f"{total} {UnitOfInformation.MEBIBYTES}"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
+
+    @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
 
     @property
     def native_value(self) -> float | None:
@@ -323,10 +329,15 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
+
+    @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         drive = next(
-            (d for d in self.coordinator.data.drive_health if d.drive_number == self.monitor_device),
+            (d for d in self.coordinator.data.drives if d.drive_number == self.monitor_device),
             None,
         )
         if drive is None:
@@ -341,7 +352,7 @@ class QNAPDriveSensor(QNAPSensor):
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         drive = next(
-            (d for d in self.coordinator.data.drive_health if d.drive_number == self.monitor_device),
+            (d for d in self.coordinator.data.drives if d.drive_number == self.monitor_device),
             None,
         )
         if drive is None:
@@ -355,6 +366,11 @@ class QNAPDriveSensor(QNAPSensor):
 
 class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
+
+    @property
+    def translation_placeholders(self) -> dict[str, str]:
+        """Return translation placeholders."""
+        return {"monitor_device": str(self.monitor_device)}
 
     @property
     def native_value(self) -> float | None:

@@ -48,17 +48,13 @@ class QNAPFirmwareUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity)
     @property
     def installed_version(self) -> str | None:
         """Return the currently installed firmware version."""
-        fw = self.coordinator.data.firmware_update
+        fw = self.coordinator.data.firmware
         return fw.current_version if fw else None
 
     @property
     def latest_version(self) -> str | None:
-        """Return the latest available firmware version.
-
-        Returns None when no update info is available or when firmware
-        is up to date — HA treats None as up-to-date.
-        """
-        fw = self.coordinator.data.firmware_update
+        """Return the latest available firmware version."""
+        fw = self.coordinator.data.firmware
         if fw is None:
             return None
         return fw.latest_version

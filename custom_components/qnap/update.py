@@ -35,26 +35,33 @@ class QNAPFirmwareUpdateEntity(CoordinatorEntity[QnapCoordinator], UpdateEntity)
     def __init__(self, coordinator: QnapCoordinator, unique_id: str) -> None:
         """Initialize the QNAP firmware update entity."""
         super().__init__(coordinator)
+        self._unique_id = unique_id
         self._attr_unique_id = f"{unique_id}_firmware_update"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            serial_number=unique_id,
-            name=coordinator.data.system_info.name,
-            model=coordinator.data.system_info.model,
-            sw_version=coordinator.data.system_info.firmware_version,
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info, pulling live data from coordinator."""
+        sys_info = self.coordinator.data.system_info if self.coordinator.data else None
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            serial_number=self._unique_id,
+            name=sys_info.name if sys_info else None,
+            model=sys_info.model if sys_info else None,
+            sw_version=sys_info.firmware_version if sys_info else None,
             manufacturer="QNAP",
         )
 
     @property
     def installed_version(self) -> str | None:
         """Return the currently installed firmware version."""
-        fw = self.coordinator.data.firmware
+        fw = self.coordinator.data.firmware if self.coordinator.data else None
         return fw.current_version if fw else None
 
     @property
     def latest_version(self) -> str | None:
-        """Return the latest available firmware version."""
-        fw = self.coordinator.data.firmware
+        """Return the latest available firmware version, or installed if no update."""
+        fw = self.coordinator.data.firmware if self.coordinator.data else None
         if fw is None:
             return None
-        return fw.latest_version
+        # Return latest if available, else return installed (no update available)
+        return fw.latest_version or fw.current_version

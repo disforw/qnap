@@ -31,14 +31,14 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DRIVE = "Drive"
 ATTR_IP = "IP Address"
 ATTR_MAC = "MAC Address"
-ATTR_MASK = "Mask"
-ATTR_MAX_SPEED = "Max Speed"
 ATTR_MEMORY_SIZE = "Memory Size"
 ATTR_MODEL = "Model"
 ATTR_PACKETS_TX = "Packets (TX)"
 ATTR_PACKETS_RX = "Packets (RX)"
 ATTR_PACKETS_ERR = "Packets (Err)"
-ATTR_SERIAL = "Serial #"
+ATTR_MAX_SPEED = "Max Speed"
+ATTR_MASK = "Mask"
+ATTR_LINK_STATUS = "Link Status"
 ATTR_TYPE = "Type"
 ATTR_VOLUME_SIZE = "Volume Size"
 
@@ -62,6 +62,13 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
         translation_key="cpu_usage",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="cpu_temp",
+        translation_key="cpu_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -93,6 +100,11 @@ _MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
     ),
 )
 _NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="network_link_status",
+        translation_key="network_link_status",
+        icon="mdi:ethernet",
+    ),
     SensorEntityDescription(
         key="network_tx",
         translation_key="network_tx",
@@ -242,10 +254,12 @@ class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == "cpu_usage":
             return round(self.coordinator.data.cpu.usage_percent, 1)
+        if self.entity_description.key == "cpu_temp":
+            return self.coordinator.data.cpu.cpu_temp
         return None
 
 
@@ -282,7 +296,7 @@ class QNAPNetworkSensor(QNAPSensor):
         return {"monitor_device": str(self.monitor_device)}
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         iface = next(
             (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
@@ -294,10 +308,12 @@ class QNAPNetworkSensor(QNAPSensor):
             return round_nicely(iface.tx_bytes_per_sec / 1024 / 1024)
         if self.entity_description.key == "network_rx":
             return round_nicely(iface.rx_bytes_per_sec / 1024 / 1024)
+        if self.entity_description.key == "network_link_status":
+            return iface.link_status
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, str | int] | None:
         """Return the state attributes."""
         iface = next(
             (i for i in self.coordinator.data.network_interfaces if i.name == self.monitor_device),
@@ -308,6 +324,12 @@ class QNAPNetworkSensor(QNAPSensor):
         return {
             ATTR_IP: iface.ip,
             ATTR_MAC: iface.mac,
+            ATTR_MASK: iface.mask,
+            ATTR_MAX_SPEED: iface.max_speed,
+            ATTR_PACKETS_TX: iface.tx_packets,
+            ATTR_PACKETS_RX: iface.rx_packets,
+            ATTR_PACKETS_ERR: iface.err_packets,
+            ATTR_LINK_STATUS: iface.link_status,
         }
 
 
@@ -320,8 +342,7 @@ class QNAPSystemSensor(QNAPSensor):
         if self.entity_description.key == "status":
             return self.coordinator.data.system_health.status
         if self.entity_description.key == "system_temp":
-            # system_temp not directly in NasData — not available from qnap_client yet
-            return None
+            return self.coordinator.data.system_info.system_temp
         return None
 
 

@@ -1,10 +1,4 @@
-# QNAP NAS Integration for Home Assistant
-
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![GitHub release](https://img.shields.io/github/release/disforw/qnap.svg)](https://github.com/disforw/qnap/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-## 👋 Welcome Back — v3.0
+## Welcome Back — v3.0
 
 After spending considerable time trying to get improvements accepted into Home Assistant core, active development is returning to this standalone HACS integration. The upstream PR process is slow by design — reviewers are volunteers with limited bandwidth, and even clean, well-tested code can sit for months before getting attention. Architectural discussions that should take a day can stretch into weeks. That's not a criticism of the HA team; it's just the reality of maintaining a massive open-source project at scale.
 
@@ -89,6 +83,12 @@ The integration registers a **firmware update entity** that appears in HA's nati
 
 Container switches use the Container Station v3 API (QTS Bearer token auth for reads, CS session auth for start/stop). If Container Station is not installed or accessible, the integration continues to work normally — container switches simply won't appear.
 
+## 🔍 Diagnostics
+
+The integration supports Home Assistant's built-in diagnostics download (**Settings → Devices & Services → QNAP → ⋮ → Download diagnostics**). It includes the config entry's settings, whether the last coordinator update succeeded, and the cached NAS data (system info, CPU, memory, network interfaces, drives, volumes, firmware, fans, external drives, and Container Station containers) — useful when reporting a bug or a missing/incorrect sensor.
+
+Host, username, password, IP addresses, MAC addresses, and serial numbers are redacted before the file is generated.
+
 ## ⚠️ Known Limitations
 
 - **Fan speed sensors** — Fan data parsing implemented in `qnap-client`; accuracy against real hardware not yet verified.
@@ -102,6 +102,7 @@ Container switches use the Container Station v3 API (QTS Bearer token auth for r
 ### New Features
 - **🐳 Container Station switches** — Start and stop Docker/LXC containers from Home Assistant
 - **🔄 Firmware update entity** — Appears in HA's native update dashboard
+- **🔍 Diagnostics** — Download redacted diagnostics for bug reports and troubleshooting
 
 ### Architecture
 - Config flow only — YAML configuration removed
